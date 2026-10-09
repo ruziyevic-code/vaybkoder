@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vaybkoding akademiya</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  :root {
+    --bg: #0f1420;
+    --card: #1a2133;
+    --text: #f2f4f8;
+    --muted: #8d96aa;
+    --accent: #3b82f6;
+    --hero1: #7f1d1d;
+    --hero2: #b91c1c;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    padding: 16px 16px 40px;
+  }
+  .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .hello { font-size: 15px; color: var(--muted); }
+  .hello b { color: var(--text); }
+  .avatar {
+    width: 34px; height: 34px; border-radius: 50%; background: var(--accent);
+    display: grid; place-items: center; font-weight: 700; font-size: 14px;
+  }
+  .hero {
+    border-radius: 20px; padding: 20px; min-height: 150px;
+    background: linear-gradient(135deg, var(--hero1), var(--hero2));
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .tag { font-size: 11px; letter-spacing: .08em; opacity: .8; }
+  .hero h2 { margin: 6px 0 0; font-size: 22px; line-height: 1.2; }
+  .hero button {
+    align-self: flex-start; margin-top: 14px; border: 0; border-radius: 999px;
+    padding: 9px 18px; font-weight: 600; background: #fff; color: #7f1d1d;
+  }
+  .sub {
+    margin: 16px 0; padding: 12px 14px; border-radius: 14px; background: var(--card);
+    display: flex; align-items: center; gap: 10px; font-size: 13px;
+  }
+  .sub .plus { background: var(--accent); border-radius: 6px; padding: 2px 7px; font-size: 11px; font-weight: 700; }
+  .sub a { color: var(--accent); margin-left: auto; text-decoration: none; font-weight: 600; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .cat {
+    background: var(--card); border-radius: 18px; padding: 14px; border: 0; color: var(--text);
+    text-align: left; font: inherit; cursor: pointer;
+  }
+  .cat .ico { font-size: 38px; }
+  .cat .name { font-weight: 700; margin-top: 8px; }
+  .cat .cnt { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  #list { display: none; }
+  .back { background: none; border: 0; color: var(--accent); font-size: 15px; padding: 0 0 12px; }
+  .item { background: var(--card); border-radius: 14px; padding: 14px; margin-bottom: 10px; }
+  .item h3 { margin: 0 0 4px; font-size: 15px; }
+  .item p { margin: 0 0 10px; font-size: 13px; color: var(--muted); }
+  .item button { border: 0; border-radius: 10px; padding: 8px 14px; background: var(--accent); color: #fff; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div id="home">
+  <div class="top">
+    <div class="hello">Salom, <b id="uname">do'stim</b></div>
+    <div class="avatar" id="av">V</div>
+  </div>
+
+  <div class="hero">
+    <div>
+      <div class="tag">QO'LLANMA</div>
+      <h2>Sun'iy intellekt bilan rolik yaratish</h2>
+    </div>
+    <button onclick="openCat('video')">Ochish →</button>
+  </div>
+
+  <div class="sub">
+    <span class="plus">PLUS</span>
+    <span>Kanalga obuna bo'lganingizda kirish ochiq</span>
+    <a href="#" id="chlink">Obuna</a>
+  </div>
+
+  <div class="grid" id="grid"></div>
+</div>
+
+<div id="list">
+  <button class="back" onclick="goHome()">← Orqaga</button>
+  <h2 id="ltitle" style="margin:0 0 14px"></h2>
+  <div id="items"></div>
+</div>
+
+<script>
+// ====== SOZLAMALAR: shu yerni o'zgartiring ======
+const CHANNEL_URL = "https://t.me/money_projects";   // kanal havolasi
+// ================================================
+
+const DATA = {
+  prompt: { name: "Promptlar", ico: "📘", items: [
+    { t: "Sayt yaratish prompti", d: "Bitta promptda landing sahifa yozdirish.", text: "Sen tajribali frontend dasturchisan. Menga zamonaviy, mobilga mos landing sahifa yoz: ..." },
+    { t: "Telegram bot prompti", d: "Bot kodini AI bilan yozdirish.", text: "Python va aiogram 3 bilan Telegram bot yoz: /start buyrug'i va inline tugmalar bilan ..." },
+    { t: "Logotip g'oyalari", d: "Brend uchun logotip konsepsiyalari.", text: "Men ... sohasida brend ochmoqchiman. 5 ta logotip g'oyasini tasvirlab ber ..." }
+  ]},
+  guide: { name: "Qo'llanmalar", ico: "📗", items: [
+    { t: "Vaybkodingga kirish", d: "Vaybkoding nima va qanday boshlanadi.", text: "Vaybkoding — kodni AI bilan suhbat orqali yaratish usuli ..." },
+    { t: "Birinchi loyihangiz", d: "30 daqiqada birinchi ilova.", text: "1) G'oyani yozing. 2) AI'ga topshiring. 3) Natijani sinab, tuzatish so'rang." }
+  ]},
+  design: { name: "Dizayn", ico: "🎨", items: [
+    { t: "Rang palitrasi tanlash", d: "Mos ranglarni AI bilan toping.", text: "Texnologiya brendi uchun zamonaviy rang palitrasi taklif qil ..." },
+    { t: "UI maket prompti", d: "Ilova ekranlari uchun prompt.", text: "Fitnes ilovasi uchun bosh ekran maketini tasvirlab ber ..." }
+  ]},
+  video: { name: "Video", ico: "🎬", items: [
+    { t: "AI bilan rolik yaratish", d: "Ssenariydan tayyor rolikgacha.", text: "30 soniyalik reklama roligi uchun ssenariy yoz ..." },
+    { t: "Subtitr qo'shish", d: "Videoga avtomatik subtitr.", text: "Videoga o'zbekcha subtitr qo'shishning eng oson yo'li ..." }
+  ]}
+};
+
+const tg = window.Telegram && window.Telegram.WebApp;
+if (tg) {
+  tg.ready(); tg.expand();
+  const u = tg.initDataUnsafe && tg.initDataUnsafe.user;
+  if (u) {
+    document.getElementById("uname").textContent = u.first_name;
+    document.getElementById("av").textContent = u.first_name[0].toUpperCase();
+  }
+  tg.setHeaderColor("#0f1420"); tg.setBackgroundColor("#0f1420");
+}
+
+document.getElementById("chlink").onclick = e => {
+  e.preventDefault();
+  tg ? tg.openTelegramLink(CHANNEL_URL) : window.open(CHANNEL_URL);
+};
+
+const grid = document.getElementById("grid");
+Object.entries(DATA).forEach(([k, c]) => {
+  const b = document.createElement("button");
+  b.className = "cat";
+  b.innerHTML = `<div class="ico">${c.ico}</div><div class="name">${c.name}</div><div class="cnt">${c.items.length} ta material</div>`;
+  b.onclick = () => openCat(k);
+  grid.appendChild(b);
+});
+
+function openCat(k) {
+  const c = DATA[k];
+  document.getElementById("ltitle").textContent = c.name;
+  const box = document.getElementById("items"); box.innerHTML = "";
+  c.items.forEach(it => {
+    const d = document.createElement("div"); d.className = "item";
+    d.innerHTML = `<h3>${it.t}</h3><p>${it.d}</p><button>Nusxalash</button>`;
+    d.querySelector("button").onclick = async ev => {
+      try { await navigator.clipboard.writeText(it.text); ev.target.textContent = "Nusxalandi ✓"; }
+      catch { tg ? tg.showAlert(it.text) : alert(it.text); }
+    };
+    box.appendChild(d);
+  });
+  document.getElementById("home").style.display = "none";
+  document.getElementById("list").style.display = "block";
+  window.scrollTo(0, 0);
+}
+function goHome() {
+  document.getElementById("list").style.display = "none";
+  document.getElementById("home").style.display = "block";
+}
+</script>
+</body>
+</html>
